@@ -22,9 +22,9 @@ class Akrabat_Tool_DatabaseSchemaProvider extends Zend_Tool_Project_Provider_Abs
      */
     protected $_appConfigSectionName;
 
-    public function update($env='development', $dir='./scripts/migrations')
+    public function update()
     {
-        return $this->updateTo(null, $env, $dir);
+        return $this->updateTo(null);
     }
 
     /**
@@ -34,18 +34,16 @@ class Akrabat_Tool_DatabaseSchemaProvider extends Zend_Tool_Project_Provider_Abs
      * version you specified.
      * 
      * @param string $version Version to change to
-     * @param string $env     Environment to retrieve database credentials from, default is development
-     * @param string $dir     Directory containing migration files, default is ./scripts/migrations
      * 
      * @return boolean
      */
-    public function updateTo($version, $env='development', $dir='./scripts/migrations')
+    public function updateTo($version)
     {
-        $this->_init($env);
+        $this->_init();
         $response = $this->_registry->getResponse();
         try {
             $db = $this->_getDbAdapter();
-            $manager = new Akrabat_Db_Schema_Manager($dir, $db, $this->getTablePrefix());
+            $manager = new Akrabat_Db_Schema_Manager(self::dir(), $db, $this->getTablePrefix());
 
             $result = $manager->updateTo($version);
 
@@ -79,18 +77,16 @@ class Akrabat_Tool_DatabaseSchemaProvider extends Zend_Tool_Project_Provider_Abs
      * down a specified number of versions.
      * 
      * @param int    $versions Number of versions to decrement. Default is 1
-     * @param string $env      Environment to read database credentials from
-     * @param string $dir      Directory containing migration files
      * 
      * @return boolean
      */
-    public function decrement($versions=1, $env='development', $dir='./scripts/migrations')
+    public function decrement($versions=1)
     {
-    	$this->_init($env);
+    	$this->_init();
         $response = $this->_registry->getResponse();
         try {
             $db = $this->_getDbAdapter();
-            $manager = new Akrabat_Db_Schema_Manager($dir, $db, $this->getTablePrefix());
+            $manager = new Akrabat_Db_Schema_Manager(self::dir(), $db, $this->getTablePrefix());
 
             $result = $manager->decrementVersion($versions);
 
@@ -117,18 +113,16 @@ class Akrabat_Tool_DatabaseSchemaProvider extends Zend_Tool_Project_Provider_Abs
      * number of versions
      * 
      * @param int    $versions Number of versions to increment. Default is 1
-     * @param string $env      Environment to read database conguration from
-     * @param string $dir      Directory containing migration scripts
      * 
      * @return booolean
      */
-    public function increment($versions=1,$env='development', $dir='./scripts/migrations')
+    public function increment($versions=1)
     {
-    	$this->_init($env);
+    	$this->_init();
         $response = $this->_registry->getResponse();
         try {
             $db = $this->_getDbAdapter();
-            $manager = new Akrabat_Db_Schema_Manager($dir, $db, $this->getTablePrefix());
+            $manager = new Akrabat_Db_Schema_Manager(self::dir(), $db, $this->getTablePrefix());
 
             $result = $manager->incrementVersion($versions);
 
@@ -155,14 +149,14 @@ class Akrabat_Tool_DatabaseSchemaProvider extends Zend_Tool_Project_Provider_Abs
      * 
      * @return boolean
      */
-    public function current($env='development', $dir='./migrations')
+    public function current()
     {
-        $this->_init($env);
+        $this->_init();
         try {
 
             // Initialize and retrieve DB resource
             $db = $this->_getDbAdapter();
-            $manager = new Akrabat_Db_Schema_Manager($dir, $db, $this->getTablePrefix());
+            $manager = new Akrabat_Db_Schema_Manager(self::dir(), $db, $this->getTablePrefix());
             echo 'Current schema version is ' . $manager->getCurrentSchemaVersion() . PHP_EOL;
 
             return true;
@@ -175,28 +169,13 @@ class Akrabat_Tool_DatabaseSchemaProvider extends Zend_Tool_Project_Provider_Abs
     }
 
     /**
-     * Retrieves the realpath for ./scripts/migrations. Does not appear to be 
-     * used anywhere. Possible candidate for removal.
-     * 
-     * @return string
-     * @deprecated
-     */
-    protected function _getDirectory()
-    {
-        $dir = './scripts/migrations';
-        return realpath($dir);
-    }
-
-    /**
      * Initializes the Akrabat functionality and adds it to Zend_Tool (zf)
-     * 
-     * @param string $env Environment to initialize for
      * 
      * @return null
      * 
      * @throws Zend_Tool_Project_Exception
      */
-    protected function _init($env)
+    protected function _init()
     {
         $profile = $this->_loadProfile(self::NO_PROFILE_THROW_EXCEPTION);
         $appConfigFileResource = $profile->search('applicationConfigFile');
@@ -206,6 +185,7 @@ class Akrabat_Tool_DatabaseSchemaProvider extends Zend_Tool_Project_Provider_Abs
         }
         $appConfigFilePath = $appConfigFileResource->getPath();
 
+        $env = self::env();
         // Base config, normally the application.ini in the configs dir of your app
         $this->_config = $this->_createConfig($appConfigFilePath, $env, true);
 
@@ -466,6 +446,13 @@ class Akrabat_Tool_DatabaseSchemaProvider extends Zend_Tool_Project_Provider_Abs
             $this->_tablePrefix = $prefix;
         }
         return $this->_tablePrefix;
+    }
+    
+    public static function env(){
+      return getenv('APPLICATION_ENV');
+    }
+    public static function dir(){
+      return 'db/migrations';
     }
 
 }
