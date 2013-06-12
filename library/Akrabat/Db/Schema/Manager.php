@@ -257,7 +257,7 @@ class Akrabat_Db_Schema_Manager
                     throw new Akrabat_Db_Schema_Exception("version $versionNumber is used for multiple migrations.");
                 }
                 $seen[$versionNumber] = true;
-                $className = $matches[2];
+                $className = $matches[2].'Migration';
                 if ($versionNumber > $from && $versionNumber <= $to) {
                     $path = $this->_relativePath($this->_dir, $dir);
                     $files["v{$matches[1]}"] = array(
